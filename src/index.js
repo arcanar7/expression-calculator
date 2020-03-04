@@ -25,11 +25,9 @@ function expressionCalculator(expr) {
     } else {
       if (priority[item]) {
         if (priority[item] <= priority[lastItemInStack(stackOperators)]) {
+          let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
           stackNumbers.push(
-            operations[lastItemInStack(stackOperators)](
-              stackNumbers.pop(),
-              stackNumbers.pop()
-            )
+            operations[lastItemInStack(stackOperators.pop())](a, b)
           )
         }
       }
