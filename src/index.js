@@ -6,7 +6,7 @@ function eval() {
 function expressionCalculator(expr) {
   const openBrackets = expr.match(/[(]/g)
   const closeBrackets = expr.match(/[)]/g)
-  let exprArray = expr.match(/[()\*\/+-]|\d+/g)
+  const exprArray = expr.match(/[()\*\/+-]|\d+/g)
 
   if ((!openBrackets && closeBrackets) || (openBrackets && !closeBrackets))
     throw "ExpressionError: Brackets must be paired"
@@ -14,11 +14,6 @@ function expressionCalculator(expr) {
     if (openBrackets.length !== closeBrackets.length) {
       throw "ExpressionError: Brackets must be paired"
     }
-  }
-
-  const calc = () => {
-    let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
-    stackNumbers.push(operations[stackOperators.pop()](a, b))
   }
 
   for (item of exprArray) {
@@ -31,7 +26,7 @@ function expressionCalculator(expr) {
         }
       }
       if (item === ")") {
-        while (stackOperators[stackOperators.length - 1] !== "(") {
+        while (lastItemInStack(stackOperators) !== "(") {
           calc()
         }
         stackOperators.pop()
@@ -48,19 +43,19 @@ function expressionCalculator(expr) {
   return stackNumbers.pop()
 }
 
-module.exports = {
-  expressionCalculator
-}
-
 let stackNumbers = []
 let stackOperators = []
 
 const operations = {
-  "+": (a, b) => a + b,
+  "+": (a, b) => (lastItemInStack(stackOperators) === "-" ? a - b : a + b),
   "-": (a, b) => (lastItemInStack(stackOperators) === "-" ? a + b : a - b),
   "*": (a, b) => a * b,
   "/": (a, b) => {
-    if (b === 0) throw new TypeError("TypeError: Division by zero.")
+    if (b === 0) {
+      stackNumbers = []
+      stackOperators = []
+      throw new TypeError("TypeError: Division by zero.")
+    }
     return a / b
   }
 }
@@ -69,13 +64,18 @@ const priority = {
   "+": 1,
   "-": 1,
   "*": 2,
-  "/": 2,
-  "0": 0
+  "/": 2
 }
 
 function lastItemInStack(stack) {
-  return stack ? stack[stack.length - 1] : 0
+  return stack[stack.length - 1]
 }
 
-const expr = " 100 - 60 / 38 + (  19 / 88 * 97 / 82 / 94  ) * 92 "
-console.log(expressionCalculator(expr))
+function calc() {
+  let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
+  stackNumbers.push(operations[stackOperators.pop()](a, b))
+}
+
+module.exports = {
+  expressionCalculator
+}
