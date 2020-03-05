@@ -16,8 +16,10 @@ function expressionCalculator(expr) {
     }
   }
 
-  let stackNumbers = []
-  let stackOperators = []
+  const calc = () => {
+    let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
+    stackNumbers.push(operations[stackOperators.pop()](a, b))
+  }
 
   for (item of exprArray) {
     if (!isNaN(item)) {
@@ -25,19 +27,22 @@ function expressionCalculator(expr) {
     } else {
       if (priority[item]) {
         if (priority[item] <= priority[lastItemInStack(stackOperators)]) {
-          let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
-          stackNumbers.push(
-            operations[lastItemInStack(stackOperators.pop())](a, b)
-          )
+          calc()
         }
+      }
+      if (item === ")") {
+        while (stackOperators[stackOperators.length - 1] !== "(") {
+          calc()
+        }
+        stackOperators.pop()
+        continue
       }
       stackOperators.push(item)
     }
   }
 
   while (stackNumbers.length > 1) {
-    let [b, a] = [stackNumbers.pop(), stackNumbers.pop()]
-    stackNumbers.push(operations[lastItemInStack(stackOperators)](a, b))
+    calc()
   }
 
   return stackNumbers.pop()
@@ -47,9 +52,12 @@ module.exports = {
   expressionCalculator
 }
 
+let stackNumbers = []
+let stackOperators = []
+
 const operations = {
   "+": (a, b) => a + b,
-  "-": (a, b) => a - b,
+  "-": (a, b) => (lastItemInStack(stackOperators) === "-" ? a + b : a - b),
   "*": (a, b) => a * b,
   "/": (a, b) => {
     if (b === 0) throw new TypeError("TypeError: Division by zero.")
@@ -69,5 +77,5 @@ function lastItemInStack(stack) {
   return stack ? stack[stack.length - 1] : 0
 }
 
-const expr = " 49 * 63 / 58 * 36"
+const expr = " 100 - 60 / 38 + (  19 / 88 * 97 / 82 / 94  ) * 92 "
 console.log(expressionCalculator(expr))
